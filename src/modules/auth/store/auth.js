@@ -60,7 +60,7 @@ export const useAuthStore = defineStore("auth", {
           localStorage.setItem("user", JSON.stringify(this.user))
           return response.data
         } else {
-          throw new Error(response.data.error || "Login failed")
+          throw new Error(response.data.error.message || "Login failed")
         }
       } catch (error) {
         this.error = error.response?.data?.error || error.message || "Login failed"

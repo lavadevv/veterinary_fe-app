@@ -1,46 +1,39 @@
 <template>
-  <div class="dashboard-page">
+  <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-6">
     <!-- Page Header -->
-    <div class="dashboard-header">
-      <div class="header-content">
-        <div class="header-info">
-          <h1 class="page-title">
-            <i class="fas fa-tachometer-alt mr-3"></i>
+    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 mb-8">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <ChartBarIcon class="w-8 h-8 mr-3 text-emerald-600" />
             Dashboard
           </h1>
-          <p class="page-subtitle">
+          <p class="text-gray-600 mt-1">
             Tổng quan hệ thống quản lý kho thú y
           </p>
         </div>
         
-        <div class="header-actions">
-          <div class="last-updated" v-if="dashboardStore.lastUpdated">
-            <i class="fas fa-clock mr-2"></i>
+        <div class="flex items-center space-x-4">
+          <div v-if="dashboardStore.lastUpdated" class="flex items-center text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+            <ClockIcon class="w-4 h-4 mr-2" />
             <span>Cập nhật: {{ formatLastUpdated }}</span>
-            <el-badge 
-              v-if="dashboardStore.isDataStale" 
-              is-dot 
-              class="ml-2"
-              type="warning"
-            >
-            </el-badge>
+            <div v-if="dashboardStore.isDataStale" class="w-2 h-2 bg-yellow-400 rounded-full ml-2"></div>
           </div>
           
-          <el-button 
-            type="primary" 
-            :loading="dashboardStore.loading"
+          <button
             @click="refreshDashboard"
-            size="large"
+            :disabled="dashboardStore.loading"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <i class="fas fa-sync-alt mr-2" :class="{ 'fa-spin': dashboardStore.loading }"></i>
+            <ArrowPathIcon class="w-4 h-4 mr-2" :class="{ 'animate-spin': dashboardStore.loading }" />
             Làm mới
-          </el-button>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Dashboard Content -->
-    <div class="dashboard-content">
+    <div class="max-w-7xl mx-auto">
       <!-- Overview Cards -->
       <OverviewCards 
         :overview="dashboardStore.overview"
@@ -48,9 +41,9 @@
       />
 
       <!-- Main Grid -->
-      <div class="dashboard-grid">
-        <!-- Left Column -->
-        <div class="grid-column left-column">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mt-8">
+        <!-- Left Column (2/3 width) -->
+        <div class="xl:col-span-2 space-y-8">
           <!-- Material Categories Chart -->
           <MaterialCategoriesChart 
             :categories="dashboardStore.materialCategories"
@@ -70,8 +63,8 @@
           />
         </div>
 
-        <!-- Right Column -->
-        <div class="grid-column right-column">
+        <!-- Right Column (1/3 width) -->
+        <div class="space-y-8">
           <!-- Stock Alerts -->
           <StockAlerts 
             :alerts="dashboardStore.stockAlerts"
@@ -102,49 +95,102 @@
       </div>
     </div>
 
-    <!-- Quick Actions Floating Button -->
-    <el-backtop target=".dashboard-page" :right="30" :bottom="80">
-      <div class="backtop-content">
-        <i class="fas fa-arrow-up"></i>
-      </div>
-    </el-backtop>
+    <!-- Back to Top Button -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform translate-y-2 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform translate-y-2 opacity-0"
+    >
+      <button
+        v-if="showBackToTop"
+        @click="scrollToTop"
+        class="fixed bottom-24 right-6 w-12 h-12 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200 z-40"
+      >
+        <ArrowUpIcon class="w-5 h-5 mx-auto" />
+      </button>
+    </Transition>
 
     <!-- Quick Actions Menu -->
-    <div class="quick-actions">
-      <el-dropdown trigger="click" placement="top">
-        <el-button type="primary" size="large" circle class="quick-action-btn">
-          <i class="fas fa-plus"></i>
-        </el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item @click="createNewMaterial">
-              <i class="fas fa-box mr-2"></i>
-              Thêm vật liệu mới
-            </el-dropdown-item>
-            <el-dropdown-item @click="createNewLocation">
-              <i class="fas fa-map-marker-alt mr-2"></i>
-              Tạo vị trí mới
-            </el-dropdown-item>
-            <el-dropdown-item @click="createNewTransaction">
-              <i class="fas fa-exchange-alt mr-2"></i>
-              Tạo giao dịch mới
-            </el-dropdown-item>
-            <el-dropdown-item @click="viewReports">
-              <i class="fas fa-chart-bar mr-2"></i>
-              Xem báo cáo
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+    <div class="fixed bottom-6 right-6 z-50">
+      <Menu as="div" class="relative">
+        <MenuButton class="w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all duration-200 hover:scale-110">
+          <PlusIcon class="w-6 h-6 mx-auto" />
+        </MenuButton>
+        
+        <Transition
+          enter-active-class="transition duration-200 ease-out"
+          enter-from-class="transform scale-95 opacity-0"
+          enter-to-class="transform scale-100 opacity-100"
+          leave-active-class="transition duration-75 ease-in"
+          leave-from-class="transform scale-100 opacity-100"
+          leave-to-class="transform scale-95 opacity-0"
+        >
+          <MenuItems class="absolute bottom-16 right-0 w-56 origin-bottom-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none">
+            <MenuItem v-slot="{ active }">
+              <button
+                @click="createNewMaterial"
+                :class="[active ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900', 'group flex w-full items-center px-4 py-3 text-sm font-medium']"
+              >
+                <CubeIcon class="mr-3 h-5 w-5" />
+                Thêm vật liệu mới
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                @click="createNewLocation"
+                :class="[active ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900', 'group flex w-full items-center px-4 py-3 text-sm font-medium']"
+              >
+                <MapPinIcon class="mr-3 h-5 w-5" />
+                Tạo vị trí mới
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                @click="createNewTransaction"
+                :class="[active ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900', 'group flex w-full items-center px-4 py-3 text-sm font-medium']"
+              >
+                <ArrowsRightLeftIcon class="mr-3 h-5 w-5" />
+                Tạo giao dịch mới
+              </button>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+              <button
+                @click="viewReports"
+                :class="[active ? 'bg-emerald-50 text-emerald-700' : 'text-gray-900', 'group flex w-full items-center px-4 py-3 text-sm font-medium']"
+              >
+                <DocumentChartBarIcon class="mr-3 h-5 w-5" />
+                Xem báo cáo
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </Transition>
+      </Menu>
     </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications-container" class="fixed top-4 right-4 z-50"></div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDashboardStore } from '../store/dashboardStore'
-import { ElMessage, ElNotification } from 'element-plus'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import {
+  ChartBarIcon,
+  ClockIcon,
+  ArrowPathIcon,
+  ArrowUpIcon,
+  PlusIcon,
+  CubeIcon,
+  MapPinIcon,
+  ArrowsRightLeftIcon,
+  DocumentChartBarIcon
+} from '@heroicons/vue/24/outline'
 
 // Components
 import OverviewCards from '../components/OverviewCards.vue'
@@ -161,6 +207,9 @@ const router = useRouter()
 
 // Auto refresh interval
 let refreshInterval = null
+
+// Reactive data
+const showBackToTop = ref(false)
 
 // Computed
 const formatLastUpdated = computed(() => {
@@ -185,28 +234,23 @@ const formatLastUpdated = computed(() => {
 const refreshDashboard = async () => {
   try {
     await dashboardStore.refreshData()
+    showNotification('Thành công', 'Dashboard đã được cập nhật', 'success')
   } catch (error) {
-    ElMessage.error('Lỗi khi làm mới dashboard')
+    showNotification('Lỗi', 'Lỗi khi làm mới dashboard', 'error')
   }
 }
 
 const refreshActivities = async () => {
   try {
     await dashboardStore.fetchRecentActivities()
-    ElMessage.success('Đã cập nhật hoạt động gần đây')
+    showNotification('Thành công', 'Đã cập nhật hoạt động gần đây', 'success')
   } catch (error) {
-    ElMessage.error('Lỗi khi cập nhật hoạt động')
+    showNotification('Lỗi', 'Lỗi khi cập nhật hoạt động', 'error')
   }
 }
 
 const handleRestock = (alert) => {
-  ElNotification({
-    title: 'Nhập thêm vật liệu',
-    message: `Chuẩn bị nhập thêm: ${alert.materialName}`,
-    type: 'info',
-    duration: 3000
-  })
-  
+  showNotification('Nhập thêm vật liệu', `Chuẩn bị nhập thêm: ${alert.materialName}`, 'info')
   // TODO: Navigate to restock page or open dialog
   console.log('Restock material:', alert)
 }
@@ -217,22 +261,18 @@ const handleViewStockDetails = (alert) => {
 }
 
 const handleViewAllAlerts = () => {
-  // TODO: Navigate to alerts page
   router.push('/materials/alerts')
 }
 
 const handleViewAllActivities = () => {
-  // TODO: Navigate to activities/audit page
   router.push('/audit')
 }
 
 const handleViewMaterial = (material) => {
-  // TODO: Navigate to material details page
   console.log('View material:', material)
 }
 
 const handleManageMaterial = (material) => {
-  // TODO: Navigate to material management page
   console.log('Manage material:', material)
 }
 
@@ -241,8 +281,7 @@ const handleViewAllMaterials = () => {
 }
 
 const handleMaterialPeriodChange = (period) => {
-  ElMessage.info(`Đổi khoảng thời gian: ${period}`)
-  // TODO: Refetch data with new period
+  showNotification('Thông tin', `Đổi khoảng thời gian: ${period}`, 'info')
 }
 
 // Quick Actions
@@ -259,13 +298,68 @@ const createNewTransaction = () => {
 }
 
 const viewReports = () => {
-  ElMessage.info('Tính năng báo cáo đang phát triển')
+  showNotification('Thông tin', 'Tính năng báo cáo đang phát triển', 'info')
+}
+
+// Scroll handling
+const handleScroll = () => {
+  showBackToTop.value = window.scrollY > 400
+}
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
+// Simple notification system
+const showNotification = (title, message, type = 'info') => {
+  const notification = document.createElement('div')
+  const colors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500'
+  }
+  
+  notification.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg mb-4 transform transition-all duration-300 translate-x-full`
+  notification.innerHTML = `
+    <div class="flex items-center">
+      <div class="flex-1">
+        <div class="font-semibold">${title}</div>
+        <div class="text-sm opacity-90">${message}</div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+  `
+  
+  const container = document.getElementById('notifications-container') || document.body
+  container.appendChild(notification)
+  
+  // Animate in
+  setTimeout(() => {
+    notification.classList.remove('translate-x-full')
+  }, 100)
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    notification.classList.add('translate-x-full')
+    setTimeout(() => notification.remove(), 300)
+  }, 5000)
 }
 
 // Lifecycle
 onMounted(async () => {
   // Load dashboard data
   await dashboardStore.fetchAllDashboardData()
+  
+  // Setup scroll listener for back to top button
+  window.addEventListener('scroll', handleScroll)
   
   // Setup auto refresh every 5 minutes
   refreshInterval = setInterval(() => {
@@ -279,197 +373,13 @@ onUnmounted(() => {
   if (refreshInterval) {
     clearInterval(refreshInterval)
   }
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
 <style scoped>
-.dashboard-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
-}
-
-.dashboard-header {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-
-.header-info {
-  flex: 1;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1f2937;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-}
-
-.page-subtitle {
-  color: #6b7280;
-  margin: 0;
-  font-size: 16px;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.last-updated {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: #6b7280;
-  background: #f9fafb;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-.dashboard-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.grid-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.quick-actions {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  z-index: 100;
-}
-
-.quick-action-btn {
-  width: 56px;
-  height: 56px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-}
-
-.quick-action-btn:hover {
-  transform: scale(1.1);
-}
-
-.backtop-content {
-  height: 40px;
-  width: 40px;
-  background: #3b82f6;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .right-column {
-    order: -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-page {
-    padding: 16px;
-  }
-  
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .page-title {
-    font-size: 24px;
-    justify-content: center;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .last-updated {
-    order: 1;
-    margin-top: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-page {
-    padding: 12px;
-  }
-  
-  .dashboard-header {
-    padding: 16px;
-  }
-  
-  .page-title {
-    font-size: 20px;
-  }
-  
-  .header-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-/* Loading States */
-.dashboard-content :deep(.el-loading-mask) {
-  border-radius: 12px;
-}
-
-/* Custom Scrollbar */
-.dashboard-page :deep(*::-webkit-scrollbar) {
-  width: 6px;
-}
-
-.dashboard-page :deep(*::-webkit-scrollbar-track) {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.dashboard-page :deep(*::-webkit-scrollbar-thumb) {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.dashboard-page :deep(*::-webkit-scrollbar-thumb:hover) {
-  background: #a1a1a1;
-}
-
-/* Animation for cards */
-.dashboard-grid > * {
+/* Custom animations for dashboard cards */
+.space-y-8 > * {
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
@@ -484,9 +394,28 @@ onUnmounted(() => {
   }
 }
 
-/* Stagger animation for grid items */
-.grid-column > *:nth-child(1) { animation-delay: 0.1s; }
-.grid-column > *:nth-child(2) { animation-delay: 0.2s; }
-.grid-column > *:nth-child(3) { animation-delay: 0.3s; }
-.grid-column > *:nth-child(4) { animation-delay: 0.4s; }
+/* Stagger animation delays */
+.space-y-8 > *:nth-child(1) { animation-delay: 0.1s; }
+.space-y-8 > *:nth-child(2) { animation-delay: 0.2s; }
+.space-y-8 > *:nth-child(3) { animation-delay: 0.3s; }
+.space-y-8 > *:nth-child(4) { animation-delay: 0.4s; }
+
+/* Custom scrollbar */
+:deep(*::-webkit-scrollbar) {
+  width: 6px;
+}
+
+:deep(*::-webkit-scrollbar-track) {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+:deep(*::-webkit-scrollbar-thumb) {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+:deep(*::-webkit-scrollbar-thumb:hover) {
+  background: #a1a1a1;
+}
 </style>

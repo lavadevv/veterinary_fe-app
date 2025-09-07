@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import * as dashboardService from '../services/dashboard.service'
-import { ElMessage } from 'element-plus'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   // State
@@ -55,8 +54,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         overview.value = response.data.data
       }
     } catch (error) {
-      ElMessage.error('Lỗi khi tải dữ liệu tổng quan')
-      console.error('Error fetching dashboard overview:', error)
+      console.error('Lỗi khi tải dữ liệu tổng quan:', error)
     } finally {
       loading.value = false
     }
@@ -164,8 +162,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       lastUpdated.value = new Date().toISOString()
       
     } catch (error) {
-      ElMessage.error('Lỗi khi tải dữ liệu dashboard')
-      console.error('Error fetching all dashboard data:', error)
+      console.error('Lỗi khi tải dữ liệu dashboard:', error)
     } finally {
       loading.value = false
     }
@@ -173,7 +170,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   const refreshData = async () => {
     await fetchAllDashboardData()
-    ElMessage.success('Dữ liệu đã được cập nhật')
+    console.log('Dữ liệu đã được cập nhật')
   }
 
   const clearData = () => {

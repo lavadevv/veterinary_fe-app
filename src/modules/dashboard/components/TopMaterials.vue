@@ -1,120 +1,148 @@
 <template>
-  <el-card class="top-materials" shadow="hover">
-    <template #header>
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-trophy mr-2"></i>
-          Vật liệu sử dụng nhiều nhất
+  <div class="bg-white rounded-xl shadow-sm border border-emerald-100 h-full flex flex-col">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+          <ChartBarIcon class="w-5 h-5 mr-2 text-emerald-500" />
+          Vật liệu hàng đầu
         </h3>
-        <el-dropdown @command="handlePeriod">
-          <el-button type="text" size="small">
-            Tháng này <i class="fas fa-chevron-down ml-1"></i>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="month">Tháng này</el-dropdown-item>
-              <el-dropdown-item command="week">Tuần này</el-dropdown-item>
-              <el-dropdown-item command="day">Hôm nay</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </template>
-
-    <div class="materials-container" v-loading="loading">
-      <div class="materials-list" v-if="materials.length > 0">
-        <div 
-          v-for="(material, index) in materials" 
-          :key="material.id"
-          class="material-item"
-          :class="{ 'top-material': index < 3 }"
-        >
-          <!-- Ranking -->
-          <div class="material-rank" :class="getRankClass(index)">
-            <span v-if="index < 3" class="rank-icon">
-              <i :class="getRankIcon(index)"></i>
-            </span>
-            <span v-else class="rank-number">{{ index + 1 }}</span>
-          </div>
-
-          <!-- Material Info -->
-          <div class="material-info">
-            <div class="material-header">
-              <h4 class="material-name">{{ material.name }}</h4>
-              <div class="material-trend" :class="material.trend">
-                <i :class="getTrendIcon(material.trend)"></i>
-              </div>
-            </div>
-            
-            <div class="material-category">
-              <i class="fas fa-tag"></i>
-              {{ material.category }}
-            </div>
-            
-            <div class="material-stats">
-              <div class="stat-item">
-                <span class="stat-label">Đã sử dụng:</span>
-                <span class="stat-value usage">{{ formatNumber(material.usedThisMonth) }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">Tồn kho:</span>
-                <span class="stat-value stock">{{ formatNumber(material.totalStock) }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">Giá trị:</span>
-                <span class="stat-value value">${{ formatNumber(material.value) }}</span>
-              </div>
-            </div>
-
-            <!-- Usage Progress -->
-            <div class="usage-progress">
-              <div class="progress-bar">
-                <div 
-                  class="progress-fill"
-                  :style="{ width: `${getUsagePercentage(material)}%` }"
-                ></div>
-              </div>
-              <span class="progress-text">
-                {{ getUsagePercentage(material) }}% của tồn kho
+        
+        <Listbox v-model="selectedPeriod" @update:modelValue="handlePeriodChange">
+          <div class="relative">
+            <ListboxButton class="relative cursor-default rounded-lg bg-white py-1 pl-3 pr-8 text-left text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <span class="block truncate">{{ selectedPeriod.label }}</span>
+              <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronUpDownIcon class="h-4 w-4 text-gray-400" />
               </span>
-            </div>
+            </ListboxButton>
+            <transition
+              leave-active-class="transition duration-100 ease-in"
+              leave-from-class="opacity-100"
+              leave-to-class="opacity-0"
+            >
+              <ListboxOptions class="absolute right-0 z-10 mt-1 max-h-60 w-32 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                <ListboxOption
+                  v-slot="{ active, selected }"
+                  v-for="period in periods"
+                  :key="period.value"
+                  :value="period"
+                  as="template"
+                >
+                  <li :class="[active ? 'bg-emerald-100 text-emerald-900' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-8 pr-4']">
+                    <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                      {{ period.label }}
+                    </span>
+                    <span v-if="selected" class="absolute inset-y-0 left-0 flex items-center pl-2 text-emerald-600">
+                      <CheckIcon class="h-4 w-4" />
+                    </span>
+                  </li>
+                </ListboxOption>
+              </ListboxOptions>
+            </transition>
           </div>
+        </Listbox>
+      </div>
+    </div>
 
-          <!-- Actions -->
-          <div class="material-actions">
-            <el-button size="small" type="text" @click="viewMaterial(material)">
-              <i class="fas fa-eye"></i>
-            </el-button>
-            <el-button size="small" type="text" @click="manageMaterial(material)">
-              <i class="fas fa-cog"></i>
-            </el-button>
+    <!-- Content -->
+    <div class="flex-1 p-6">
+      <!-- Loading State -->
+      <div v-if="loading" class="space-y-3">
+        <div v-for="i in 5" :key="i" class="animate-pulse">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-2 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div class="w-16 h-3 bg-gray-200 rounded"></div>
           </div>
         </div>
       </div>
 
-      <div v-else-if="!loading" class="no-data">
-        <i class="fas fa-box-open text-gray-400 text-3xl mb-2"></i>
-        <p class="text-gray-500">Không có dữ liệu vật liệu</p>
+      <!-- Materials List -->
+      <div v-else-if="materials.length > 0" class="space-y-3">
+        <div 
+          v-for="(material, index) in materials" 
+          :key="material.id"
+          class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+        >
+          <!-- Rank -->
+          <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+               :class="getRankClass(index)">
+            {{ index + 1 }}
+          </div>
+          
+          <!-- Material Icon -->
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
+              <CubeIcon class="w-5 h-5 text-white" />
+            </div>
+          </div>
+          
+          <!-- Material Info -->
+          <div class="flex-1 min-w-0">
+            <h4 class="text-sm font-medium text-gray-900 truncate">{{ material.name }}</h4>
+            <p class="text-xs text-gray-500">{{ material.category }}</p>
+          </div>
+          
+          <!-- Usage Stats -->
+          <div class="text-right">
+            <p class="text-sm font-semibold text-gray-900">{{ formatNumber(material.usage) }}</p>
+            <p class="text-xs text-gray-500">{{ material.unit }}</p>
+          </div>
+          
+          <!-- Actions -->
+          <div class="flex space-x-1">
+            <button
+              @click="$emit('view-material', material)"
+              class="p-1 text-gray-400 hover:text-emerald-600 focus:outline-none focus:text-emerald-600"
+            >
+              <EyeIcon class="w-4 h-4" />
+            </button>
+            <button
+              @click="$emit('manage-material', material)"
+              class="p-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:text-blue-600"
+            >
+              <CogIcon class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Data -->
+      <div v-else class="flex flex-col items-center justify-center h-40">
+        <CubeIcon class="w-12 h-12 text-gray-300 mb-2" />
+        <p class="text-gray-500 text-sm">Không có dữ liệu vật liệu</p>
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="materials-footer" v-if="materials.length > 0">
-      <div class="total-info">
-        <span class="total-label">Tổng giá trị:</span>
-        <span class="total-value">${{ formatNumber(totalValue) }}</span>
-      </div>
-      <el-button type="text" size="small" @click="viewAllMaterials">
+    <div v-if="materials.length > 0" class="p-4 border-t border-gray-200">
+      <button
+        @click="$emit('view-all')"
+        class="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center justify-center"
+      >
         Xem tất cả vật liệu
-        <i class="fas fa-arrow-right ml-1"></i>
-      </el-button>
+        <ArrowRightIcon class="w-3 h-3 ml-1" />
+      </button>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed } from 'vue'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
+import {
+  ChartBarIcon,
+  ChevronUpDownIcon,
+  CheckIcon,
+  CubeIcon,
+  EyeIcon,
+  CogIcon,
+  ArrowRightIcon
+} from '@heroicons/vue/24/outline'
 
 // Props
 const props = defineProps({
@@ -131,343 +159,31 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['view-material', 'manage-material', 'view-all', 'period-change'])
 
-// Computed
-const totalValue = computed(() => {
-  return props.materials.reduce((sum, material) => sum + material.value, 0)
-})
+// Reactive data
+const periods = [
+  { value: '7d', label: '7 ngày' },
+  { value: '30d', label: '30 ngày' },
+  { value: '90d', label: '90 ngày' },
+  { value: '1y', label: '1 năm' }
+]
+
+const selectedPeriod = ref(periods[1]) // Default to 30 days
 
 // Methods
+const getRankClass = (index) => {
+  if (index === 0) return 'bg-yellow-100 text-yellow-800' // Gold
+  if (index === 1) return 'bg-gray-100 text-gray-800'     // Silver
+  if (index === 2) return 'bg-orange-100 text-orange-800' // Bronze
+  return 'bg-blue-100 text-blue-800'                      // Others
+}
+
 const formatNumber = (num) => {
-  if (!num) return '0'
+  if (!num && num !== 0) return '0'
   return num.toLocaleString('vi-VN')
 }
 
-const getRankClass = (index) => {
-  if (index === 0) return 'gold'
-  if (index === 1) return 'silver'
-  if (index === 2) return 'bronze'
-  return 'normal'
-}
-
-const getRankIcon = (index) => {
-  if (index === 0) return 'fas fa-crown'
-  if (index === 1) return 'fas fa-medal'
-  if (index === 2) return 'fas fa-award'
-  return ''
-}
-
-const getTrendIcon = (trend) => {
-  if (trend === 'up') return 'fas fa-arrow-up'
-  if (trend === 'down') return 'fas fa-arrow-down'
-  return 'fas fa-minus'
-}
-
-const getUsagePercentage = (material) => {
-  if (!material.totalStock || material.totalStock === 0) return 0
-  return Math.round((material.usedThisMonth / material.totalStock) * 100)
-}
-
-const handlePeriod = (command) => {
-  emit('period-change', command)
-}
-
-const viewMaterial = (material) => {
-  emit('view-material', material)
-}
-
-const manageMaterial = (material) => {
-  emit('manage-material', material)
-}
-
-const viewAllMaterials = () => {
-  emit('view-all')
+const handlePeriodChange = (period) => {
+  selectedPeriod.value = period
+  emit('period-change', period.value)
 }
 </script>
-
-<style scoped>
-.top-materials {
-  border-radius: 12px;
-  border: none;
-  height: 100%;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.materials-container {
-  min-height: 300px;
-}
-
-.materials-list {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.material-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  transition: all 0.2s ease;
-  background: white;
-}
-
-.material-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
-}
-
-.top-material {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 2px solid #e2e8f0;
-}
-
-.material-rank {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-.material-rank.gold {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  color: #92400e;
-}
-
-.material-rank.silver {
-  background: linear-gradient(135deg, #c0c0c0 0%, #e5e7eb 100%);
-  color: #374151;
-}
-
-.material-rank.bronze {
-  background: linear-gradient(135deg, #cd7f32 0%, #d97706 100%);
-  color: white;
-}
-
-.material-rank.normal {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.rank-icon {
-  font-size: 20px;
-}
-
-.rank-number {
-  font-size: 18px;
-}
-
-.material-info {
-  flex: 1;
-}
-
-.material-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.material-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.material-trend {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.material-trend.up {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.material-trend.down {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.material-trend.stable {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.material-category {
-  font-size: 13px;
-  color: #6b7280;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.material-stats {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-label {
-  color: #6b7280;
-}
-
-.stat-value {
-  font-weight: 600;
-}
-
-.stat-value.usage {
-  color: #3b82f6;
-}
-
-.stat-value.stock {
-  color: #059669;
-}
-
-.stat-value.value {
-  color: #dc2626;
-}
-
-.usage-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e5e7eb;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 11px;
-  color: #6b7280;
-  white-space: nowrap;
-}
-
-.material-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.materials-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.total-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.total-label {
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.total-value {
-  font-size: 16px;
-  font-weight: bold;
-  color: #1f2937;
-}
-
-.no-data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: #6b7280;
-}
-
-/* Scrollbar styling */
-.materials-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.materials-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 2px;
-}
-
-.materials-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 2px;
-}
-
-.materials-list::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .material-item {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .material-header {
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .material-stats {
-    justify-content: center;
-  }
-  
-  .material-actions {
-    flex-direction: row;
-  }
-  
-  .materials-footer {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-}
-</style>

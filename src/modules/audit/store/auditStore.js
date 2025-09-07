@@ -42,7 +42,7 @@ export const useAuditStore = defineStore('audit', {
       try {
         // Merge default params with provided params
         const queryParams = {
-          start: (params.page - 1) * (params.limit || this.pagination.pageSize) || 0,
+          start: (params.page - 1) || 0,
           limit: params.limit || this.pagination.pageSize,
           keywords: params.keywords || this.filters.keywords,
           action: params.action || this.filters.action,
@@ -61,13 +61,21 @@ export const useAuditStore = defineStore('audit', {
         const response = await getAuditLogs(cleanParams);
         const data = response.data;
         
-        this.auditLogs = data.content;
+        console.log('Audit API Response:', response);
+        console.log('Audit API Data:', data);
+        console.log('Data content:', data.content);
+        console.log('Data type:', typeof data);
+        
+        this.auditLogs = data.content || data.items || data || [];
         this.pagination = {
-          current: data.number + 1,
-          pageSize: data.size,
-          total: data.totalElements,
-          totalPages: data.totalPages
+          current: (data.number || data.page || 0) + 1,
+          pageSize: data.size || data.pageSize || 10,
+          total: data.totalElements || data.total || 0,
+          totalPages: data.totalPages || Math.ceil((data.totalElements || data.total || 0) / (data.size || data.pageSize || 10))
         };
+
+        console.log('Updated auditLogs:', this.auditLogs);
+        console.log('Updated pagination:', this.pagination);
 
         // Update filters state
         this.filters = {

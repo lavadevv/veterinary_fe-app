@@ -1,5 +1,4 @@
 // Mock data service for dashboard
-import { ElMessage } from 'element-plus'
 
 // Simulate API delay
 const simulateDelay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms))

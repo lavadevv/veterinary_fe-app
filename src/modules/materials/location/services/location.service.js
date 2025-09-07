@@ -2,8 +2,7 @@ import api from '@/services/axios'
 
 // Lấy danh sách locations với pagination/filter
 export const getLocations = (params = {}) => {
-  const queryString = new URLSearchParams(params).toString()
-  return api.get(`/location${queryString ? `?${queryString}` : ''}`)
+  return api.get('/location', { params })
 }
 
 // Lấy thông tin 1 location theo ID
@@ -26,7 +25,7 @@ export const getLocationCapacity = (id) => api.get(`/location/${id}/capacity`)
 export const createLocation = (data) => api.post('/location', data)
 
 // Cập nhật thông tin location
-export const updateLocation = (data) => api.put('/location', data)
+export const updateLocation = (id, data) => api.put('/location', { ...data, id })
 
 // Xóa 1 location
 export const deleteLocation = (id) => api.delete(`/location/${id}`)
@@ -40,3 +39,11 @@ export const updateLocationCapacity = (id, capacity) =>
 
 // Bật/tắt trạng thái khả dụng
 export const toggleLocationAvailability = (id) => api.put(`/location/${id}/toggle-availability`)
+
+// Cập nhật trạng thái location
+export const updateLocationStatus = (id, isAvailable) => 
+  api.patch(`/location/${id}/status`, { isAvailable })
+
+// Export dữ liệu
+export const exportLocations = (format, params = {}) => 
+  api.get(`/location/export`, { params: { ...params, format }, responseType: 'blob' })

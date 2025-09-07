@@ -9,6 +9,8 @@ const api = axios.create({
   }
 })
 
+console.log('API base URL:', import.meta.env.VITE_API_URL)
+
 // Request interceptor - add token to headers
 api.interceptors.request.use(
   (config) => {

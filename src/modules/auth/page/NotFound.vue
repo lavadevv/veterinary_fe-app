@@ -1,211 +1,94 @@
-<!-- NotFound.vue - 404 Error Page -->
+<!-- NotFound.vue - 404 Error Page with HeadlessUI + TailwindCSS -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-    <div class="max-w-lg w-full text-center">
+  <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
+    <div class="max-w-md w-full text-center">
       <!-- 404 Animation -->
-      <div class="mb-8 relative">
-        <div class="text-8xl md:text-9xl font-bold text-blue-200 select-none animate-pulse">
-          404
-        </div>
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div class="w-32 h-32 bg-blue-500 rounded-full opacity-20 animate-ping"></div>
+      <div class="mb-8">
+        <div class="relative">
+          <div class="text-9xl font-bold text-emerald-200 select-none">404</div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center">
+              <span class="text-3xl">🐾</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="bg-white rounded-2xl shadow-xl p-8 transform hover:scale-105 transition-transform duration-300">
-        <!-- Illustration -->
-        <div class="mb-6">
-          <svg class="w-32 h-32 mx-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
-                  d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.462-.726-6.228-1.963L12 9l6.228 4.037z"/>
-          </svg>
-        </div>
-
-        <!-- Title -->
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-          Không tìm thấy trang
-        </h1>
-        
-        <!-- Description -->
-        <p class="text-gray-600 text-lg mb-8 leading-relaxed">
-          Rất tiếc! Trang bạn đang tìm kiếm không tồn tại hoặc đã được di chuyển.
+      <!-- Error Message -->
+      <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Trang không tìm thấy</h1>
+        <p class="text-gray-600 mb-6">
+          Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
         </p>
 
         <!-- Action Buttons -->
-        <div class="space-y-4">
-          <el-button 
-            type="primary" 
-            size="large"
+        <div class="space-y-3">
+          <button
             @click="goHome"
-            class="w-full md:w-auto min-w-[200px] rounded-full"
+            class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
           >
-            <i class="el-icon-house mr-2"></i>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
             Về trang chủ
-          </el-button>
-          
-          <div class="flex flex-col md:flex-row gap-3 justify-center">
-            <el-button 
-              @click="goBack"
-              size="large"
-              class="min-w-[150px] rounded-full"
-            >
-              <i class="el-icon-arrow-left mr-2"></i>
-              Quay lại
-            </el-button>
-            
-            <el-button 
-              @click="reloadPage"
-              size="large"
-              class="min-w-[150px] rounded-full"
-            >
-              <i class="el-icon-refresh mr-2"></i>
-              Tải lại
-            </el-button>
-          </div>
-        </div>
+          </button>
 
-        <!-- Help Links -->
-        <div class="mt-8 pt-6 border-t border-gray-200">
-          <p class="text-sm text-gray-500 mb-3">Có thể bạn đang tìm:</p>
-          <div class="flex flex-wrap justify-center gap-2">
-            <el-button 
-              type="text" 
-              size="small"
-              @click="goToPath('/dashboard')"
-              class="text-blue-600 hover:text-blue-800"
-            >
-              Dashboard
-            </el-button>
-            <span class="text-gray-300">•</span>
-            <el-button 
-              type="text" 
-              size="small"
-              @click="goToPath('/profile')"
-              class="text-blue-600 hover:text-blue-800"
-            >
-              Profile
-            </el-button>
-            <span class="text-gray-300">•</span>
-            <el-button 
-              type="text" 
-              size="small"
-              @click="goToPath('/login')"
-              class="text-blue-600 hover:text-blue-800"
-            >
-              Đăng nhập
-            </el-button>
+          <button
+            @click="goBack"
+            class="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại
+          </button>
+        </div>
+      </div>
+
+      <!-- Help Section -->
+      <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3 text-sm text-blue-700">
+            <p><strong>Cần trợ giúp?</strong></p>
+            <p>Liên hệ với chúng tôi qua email: <a href="mailto:contact@dophuclam.id.vn" class="underline">contact@dophuclam.id.vn</a></p>
           </div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="mt-8 text-center">
-        <p class="text-gray-500 text-sm">
-          Mã lỗi: 404 • Trang không tồn tại
-        </p>
+      <!-- Popular Links -->
+      <div class="mt-6 text-sm text-gray-500">
+        <p class="mb-2">Có thể bạn đang tìm:</p>
+        <div class="flex flex-wrap justify-center gap-2">
+          <router-link to="/dashboard" class="text-emerald-600 hover:text-emerald-700 underline">Trang chủ</router-link>
+          <span>•</span>
+          <router-link to="/auth/login" class="text-emerald-600 hover:text-emerald-700 underline">Đăng nhập</router-link>
+          <span>•</span>
+          <router-link to="/user" class="text-emerald-600 hover:text-emerald-700 underline">Quản lý người dùng</router-link>
+        </div>
       </div>
     </div>
 
-    <!-- Background Decorations -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-4 -right-4 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-      <div class="absolute -bottom-8 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-    </div>
+    <!-- Decorative elements -->
+    <div class="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-emerald-400/10 to-teal-600/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyan-400/10 to-blue-600/10 rounded-full blur-3xl"></div>
   </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 
-// Methods
 const goHome = () => {
-  router.push('/')
-  ElMessage.success('Đã chuyển về trang chủ')
+  router.push('/dashboard')
 }
 
 const goBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.push('/')
-  }
-}
-
-const reloadPage = () => {
-  window.location.reload()
-}
-
-const goToPath = (path) => {
-  router.push(path).catch(() => {
-    ElMessage.warning(`Trang ${path} không khả dụng`)
-  })
+  router.back()
 }
 </script>
-
-<style scoped>
-/* Custom animations */
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-/* Hover effects */
-.hover\:scale-105:hover {
-  transform: scale(1.05);
-}
-
-/* Responsive text */
-@media (max-width: 768px) {
-  .text-8xl {
-    font-size: 4rem;
-  }
-  
-  .text-9xl {
-    font-size: 5rem;
-  }
-}
-
-/* Element Plus customizations */
-:deep(.el-button) {
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-:deep(.el-button--primary) {
-  background: linear-gradient(135deg, #409eff 0%, #1890ff 100%);
-  border: none;
-}
-
-:deep(.el-button--primary:hover) {
-  background: linear-gradient(135deg, #66b1ff 0%, #40a9ff 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
-}
-</style>

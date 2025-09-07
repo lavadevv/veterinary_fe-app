@@ -1,64 +1,57 @@
 <template>
-  <el-card class="material-categories-chart" shadow="hover">
-    <template #header>
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-chart-pie mr-2"></i>
-          Phân loại vật liệu
-        </h3>
-        <el-dropdown @command="handleExport">
-          <el-button type="text" size="small">
-            <i class="fas fa-download"></i>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="png">Xuất PNG</el-dropdown-item>
-              <el-dropdown-item command="pdf">Xuất PDF</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </template>
+  <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+        <ChartPieIcon class="w-5 h-5 mr-2 text-emerald-500" />
+        Danh mục vật liệu
+      </h3>
+    </div>
 
-    <div class="chart-container" v-loading="loading">
-      <!-- Custom pie chart using CSS -->
-      <div class="pie-chart-wrapper" v-if="categories.length > 0">
-        <div class="pie-chart">
-          <canvas ref="chartCanvas" width="200" height="200"></canvas>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    </div>
+
+    <!-- Chart Container -->
+    <div v-else-if="categories.length > 0" class="space-y-4">
+      <!-- Mock Chart Area -->
+      <div class="h-64 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg flex items-center justify-center border-2 border-dashed border-emerald-200">
+        <div class="text-center">
+          <ChartPieIcon class="w-16 h-16 text-emerald-400 mx-auto mb-2" />
+          <p class="text-emerald-600 font-medium">Biểu đồ tròn danh mục</p>
+          <p class="text-sm text-gray-500">{{ categories.length }} danh mục</p>
         </div>
-        
-        <div class="chart-legend">
+      </div>
+
+      <!-- Legend -->
+      <div class="grid grid-cols-2 gap-3">
+        <div 
+          v-for="(category, index) in categories" 
+          :key="category.name"
+          class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg"
+        >
           <div 
-            v-for="(category, index) in categories" 
-            :key="index"
-            class="legend-item"
-          >
-            <div 
-              class="legend-color" 
-              :style="{ backgroundColor: category.color }"
-            ></div>
-            <div class="legend-content">
-              <span class="legend-name">{{ category.name }}</span>
-              <span class="legend-value">{{ category.value }}</span>
-              <span class="legend-percentage">
-                ({{ calculatePercentage(category.value) }}%)
-              </span>
-            </div>
+            class="w-3 h-3 rounded-full"
+            :style="{ backgroundColor: getColor(index) }"
+          ></div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">{{ category.name }}</p>
+            <p class="text-xs text-gray-500">{{ formatNumber(category.count) }} vật liệu</p>
           </div>
         </div>
       </div>
-
-      <div v-else-if="!loading" class="no-data">
-        <i class="fas fa-chart-pie text-gray-400 text-3xl mb-2"></i>
-        <p class="text-gray-500">Không có dữ liệu</p>
-      </div>
     </div>
-  </el-card>
+
+    <!-- No Data -->
+    <div v-else class="flex flex-col items-center justify-center h-64">
+      <ChartPieIcon class="w-16 w-16 text-gray-300 mb-4" />
+      <p class="text-gray-500">Không có dữ liệu danh mục</p>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ChartPieIcon } from '@heroicons/vue/24/outline'
 
 // Props
 const props = defineProps({
@@ -72,172 +65,17 @@ const props = defineProps({
   }
 })
 
-// Refs
-const chartCanvas = ref(null)
-
-// Computed
-const totalValue = computed(() => {
-  return props.categories.reduce((sum, cat) => sum + cat.value, 0)
-})
-
 // Methods
-const calculatePercentage = (value) => {
-  if (totalValue.value === 0) return 0
-  return Math.round((value / totalValue.value) * 100)
+const getColor = (index) => {
+  const colors = [
+    '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', 
+    '#ef4444', '#06b6d4', '#84cc16', '#f97316'
+  ]
+  return colors[index % colors.length]
 }
 
-const drawPieChart = () => {
-  if (!chartCanvas.value || !props.categories.length) return
-  
-  const canvas = chartCanvas.value
-  const ctx = canvas.getContext('2d')
-  const centerX = canvas.width / 2
-  const centerY = canvas.height / 2
-  const radius = 80
-  
-  // Clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  
-  let currentAngle = -Math.PI / 2 // Start from top
-  
-  props.categories.forEach(category => {
-    const sliceAngle = (category.value / totalValue.value) * 2 * Math.PI
-    
-    // Draw slice
-    ctx.beginPath()
-    ctx.moveTo(centerX, centerY)
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle)
-    ctx.closePath()
-    ctx.fillStyle = category.color
-    ctx.fill()
-    
-    // Draw border
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 2
-    ctx.stroke()
-    
-    currentAngle += sliceAngle
-  })
+const formatNumber = (num) => {
+  if (!num && num !== 0) return '0'
+  return num.toLocaleString('vi-VN')
 }
-
-const handleExport = (command) => {
-  ElMessage.info(`Xuất ${command.toUpperCase()} - Tính năng đang phát triển`)
-}
-
-// Lifecycle
-onMounted(() => {
-  drawPieChart()
-})
-
-watch(() => props.categories, () => {
-  drawPieChart()
-}, { deep: true })
 </script>
-
-<style scoped>
-.material-categories-chart {
-  border-radius: 12px;
-  border: none;
-  height: 100%;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.chart-container {
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pie-chart-wrapper {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  width: 100%;
-}
-
-.pie-chart {
-  flex-shrink: 0;
-}
-
-.chart-legend {
-  flex: 1;
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.legend-item:last-child {
-  border-bottom: none;
-}
-
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.legend-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.legend-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-}
-
-.legend-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: #059669;
-}
-
-.legend-percentage {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.no-data {
-  text-align: center;
-  color: #6b7280;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .pie-chart-wrapper {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .chart-legend {
-    max-height: 200px;
-    width: 100%;
-  }
-}
-</style>

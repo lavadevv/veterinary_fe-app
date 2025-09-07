@@ -1,126 +1,178 @@
 <template>
-  <div class="overview-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <!-- Total Users -->
-    <el-card class="stat-card" shadow="hover">
-      <div class="stat-content">
-        <div class="stat-icon users-icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-details">
-          <h3 class="stat-number">{{ formatNumber(overview.totalUsers) }}</h3>
-          <p class="stat-label">Tổng người dùng</p>
-          <div class="stat-change positive" v-if="overview.userGrowth > 0">
-            <i class="fas fa-arrow-up"></i>
-            +{{ overview.userGrowth }}%
+  <div class="space-y-6">
+    <!-- Main Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Total Users -->
+      <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <UsersIcon class="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <p class="text-sm font-medium text-gray-500">Tổng người dùng</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatNumber(overview.totalUsers) }}</p>
+            <div v-if="overview.userGrowth > 0" class="flex items-center text-sm text-green-600 mt-1">
+              <ArrowTrendingUpIcon class="w-3 h-3 mr-1" />
+              +{{ overview.userGrowth }}%
+            </div>
           </div>
         </div>
       </div>
-    </el-card>
 
-    <!-- Total Materials -->
-    <el-card class="stat-card" shadow="hover">
-      <div class="stat-content">
-        <div class="stat-icon materials-icon">
-          <i class="fas fa-boxes"></i>
-        </div>
-        <div class="stat-details">
-          <h3 class="stat-number">{{ formatNumber(overview.totalMaterials) }}</h3>
-          <p class="stat-label">Tổng vật liệu</p>
-          <div class="stat-change positive" v-if="overview.materialGrowth > 0">
-            <i class="fas fa-arrow-up"></i>
-            +{{ overview.materialGrowth }}%
+      <!-- Total Materials -->
+      <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center">
+              <CubeIcon class="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <p class="text-sm font-medium text-gray-500">Tổng vật liệu</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatNumber(overview.totalMaterials) }}</p>
+            <div v-if="overview.materialGrowth > 0" class="flex items-center text-sm text-green-600 mt-1">
+              <ArrowTrendingUpIcon class="w-3 h-3 mr-1" />
+              +{{ overview.materialGrowth }}%
+            </div>
           </div>
         </div>
       </div>
-    </el-card>
 
-    <!-- Total Transactions -->
-    <el-card class="stat-card" shadow="hover">
-      <div class="stat-content">
-        <div class="stat-icon transactions-icon">
-          <i class="fas fa-exchange-alt"></i>
-        </div>
-        <div class="stat-details">
-          <h3 class="stat-number">{{ formatNumber(overview.totalTransactions) }}</h3>
-          <p class="stat-label">Tổng giao dịch</p>
-          <div class="stat-change positive" v-if="overview.transactionGrowth > 0">
-            <i class="fas fa-arrow-up"></i>
-            +{{ overview.transactionGrowth }}%
+      <!-- Total Transactions -->
+      <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <ArrowsRightLeftIcon class="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <p class="text-sm font-medium text-gray-500">Tổng giao dịch</p>
+            <p class="text-2xl font-bold text-gray-900">{{ formatNumber(overview.totalTransactions) }}</p>
+            <div v-if="overview.transactionGrowth > 0" class="flex items-center text-sm text-green-600 mt-1">
+              <ArrowTrendingUpIcon class="w-3 h-3 mr-1" />
+              +{{ overview.transactionGrowth }}%
+            </div>
           </div>
         </div>
       </div>
-    </el-card>
 
-    <!-- Stock Alerts -->
-    <el-card class="stat-card alert-card" shadow="hover">
-      <div class="stat-content">
-        <div class="stat-icon alerts-icon">
-          <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="stat-details">
-          <h3 class="stat-number">{{ overview.lowStockAlerts }}</h3>
-          <p class="stat-label">Cảnh báo tồn kho</p>
-          <div class="stat-change critical">
-            <i class="fas fa-exclamation-circle"></i>
-            Cần xử lý
+      <!-- Stock Alerts -->
+      <div class="bg-gradient-to-br from-red-50 to-orange-50 border-red-200 rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+              <ExclamationTriangleIcon class="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div class="ml-4 flex-1">
+            <p class="text-sm font-medium text-gray-500">Cảnh báo tồn kho</p>
+            <p class="text-2xl font-bold text-gray-900">{{ overview.lowStockAlerts }}</p>
+            <div class="flex items-center text-sm text-red-600 mt-1">
+              <ExclamationCircleIcon class="w-3 h-3 mr-1" />
+              Cần xử lý
+            </div>
           </div>
         </div>
       </div>
-    </el-card>
-  </div>
+    </div>
 
-  <!-- Secondary Stats -->
-  <div class="secondary-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <el-card class="mini-stat" shadow="hover">
-      <div class="mini-stat-content">
-        <i class="fas fa-warehouse mini-stat-icon"></i>
-        <div>
-          <p class="mini-stat-number">{{ overview.totalWarehouses }}</p>
-          <p class="mini-stat-label">Tổng kho</p>
+    <!-- Secondary Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <BuildingStorefrontIcon class="w-8 h-8 text-indigo-600 mr-3" />
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ overview.totalWarehouses || 0 }}</p>
+            <p class="text-sm text-gray-500">Tổng kho</p>
+          </div>
         </div>
       </div>
-    </el-card>
 
-    <el-card class="mini-stat" shadow="hover">
-      <div class="mini-stat-content">
-        <i class="fas fa-map-marker-alt mini-stat-icon"></i>
-        <div>
-          <p class="mini-stat-number">{{ overview.availableLocations }}/{{ overview.totalLocations }}</p>
-          <p class="mini-stat-label">Vị trí khả dụng</p>
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <MapPinIcon class="w-8 h-8 text-emerald-600 mr-3" />
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ overview.availableLocations || 0 }}/{{ overview.totalLocations || 0 }}</p>
+            <p class="text-sm text-gray-500">Vị trí khả dụng</p>
+          </div>
         </div>
       </div>
-    </el-card>
 
-    <el-card class="mini-stat" shadow="hover">
-      <div class="mini-stat-content">
-        <i class="fas fa-chart-pie mini-stat-icon"></i>
-        <div>
-          <p class="mini-stat-number">{{ overview.capacityUtilization }}%</p>
-          <p class="mini-stat-label">Tỷ lệ sử dụng</p>
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <ChartPieIcon class="w-8 h-8 text-yellow-600 mr-3" />
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ overview.capacityUtilization || 0 }}%</p>
+            <p class="text-sm text-gray-500">Tỷ lệ sử dụng</p>
+          </div>
         </div>
       </div>
-    </el-card>
 
-    <el-card class="mini-stat" shadow="hover">
-      <div class="mini-stat-content">
-        <i class="fas fa-clock mini-stat-icon"></i>
-        <div>
-          <p class="mini-stat-number">{{ overview.totalCapacity }}%</p>
-          <p class="mini-stat-label">Hiệu suất tổng</p>
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center">
+          <ClockIcon class="w-8 h-8 text-purple-600 mr-3" />
+          <div>
+            <p class="text-lg font-bold text-gray-900">{{ overview.totalCapacity || 0 }}%</p>
+            <p class="text-sm text-gray-500">Hiệu suất tổng</p>
+          </div>
         </div>
       </div>
-    </el-card>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div v-for="i in 4" :key="i" class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+          </div>
+          <div class="ml-4 flex-1">
+            <div class="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div class="h-6 bg-gray-200 rounded animate-pulse mb-1"></div>
+            <div class="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import {
+  UsersIcon,
+  CubeIcon,
+  ArrowsRightLeftIcon,
+  ExclamationTriangleIcon,
+  ExclamationCircleIcon,
+  ArrowTrendingUpIcon,
+  BuildingStorefrontIcon,
+  MapPinIcon,
+  ChartPieIcon,
+  ClockIcon
+} from '@heroicons/vue/24/outline'
 
 // Props
 const props = defineProps({
   overview: {
     type: Object,
-    default: () => ({})
+    default: () => ({
+      totalUsers: 0,
+      totalMaterials: 0,
+      totalTransactions: 0,
+      lowStockAlerts: 0,
+      userGrowth: 0,
+      materialGrowth: 0,
+      transactionGrowth: 0,
+      totalWarehouses: 0,
+      availableLocations: 0,
+      totalLocations: 0,
+      capacityUtilization: 0,
+      totalCapacity: 0
+    })
   },
   loading: {
     type: Boolean,
@@ -130,122 +182,28 @@ const props = defineProps({
 
 // Methods
 const formatNumber = (num) => {
-  if (!num) return '0'
+  if (!num && num !== 0) return '0'
   return num.toLocaleString('vi-VN')
 }
 </script>
 
 <style scoped>
-.stat-card {
-  border-radius: 12px;
-  border: none;
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
+/* Card hover animations */
+.group:hover {
   transform: translateY(-2px);
 }
 
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* Loading skeleton animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: white;
-}
-
-.users-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.materials-icon {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.transactions-icon {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.alerts-icon {
-  background: linear-gradient(135deg, #ffd89b 0%, #ff7070 100%);
-}
-
-.stat-details {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: 28px;
-  font-weight: bold;
-  color: #1f2937;
-  margin: 0 0 4px 0;
-}
-
-.stat-label {
-  color: #6b7280;
-  margin: 0 0 8px 0;
-  font-size: 14px;
-}
-
-.stat-change {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.stat-change.positive {
-  color: #10b981;
-}
-
-.stat-change.critical {
-  color: #ef4444;
-}
-
-.alert-card {
-  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
-}
-
-.mini-stat {
-  border-radius: 8px;
-  border: none;
-}
-
-.mini-stat-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.mini-stat-icon {
-  font-size: 20px;
-  color: #6366f1;
-}
-
-.mini-stat-number {
-  font-size: 18px;
-  font-weight: bold;
-  color: #1f2937;
-  margin: 0;
-}
-
-.mini-stat-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.secondary-stats .el-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

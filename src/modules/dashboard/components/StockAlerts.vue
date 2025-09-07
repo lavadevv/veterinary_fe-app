@@ -1,126 +1,199 @@
 <template>
-  <el-card class="stock-alerts" shadow="hover">
-    <template #header>
-      <div class="card-header">
-        <h3 class="card-title">
-          <i class="fas fa-exclamation-triangle mr-2"></i>
+  <div class="bg-white rounded-xl shadow-sm border border-emerald-100 h-full flex flex-col">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+          <ExclamationTriangleIcon class="w-5 h-5 mr-2 text-orange-500" />
           Cảnh báo tồn kho
-          <el-badge 
-            :value="totalAlertsCount" 
-            :type="criticalAlertsCount > 0 ? 'danger' : 'warning'"
-            class="ml-2"
-          />
+          <span v-if="totalAlertsCount > 0" 
+                class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="criticalAlertsCount > 0 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
+            {{ totalAlertsCount }}
+          </span>
         </h3>
-        <el-dropdown @command="handleFilter">
-          <el-button type="text" size="small">
-            <i class="fas fa-filter"></i>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="all">Tất cả</el-dropdown-item>
-              <el-dropdown-item command="critical">Nghiêm trọng</el-dropdown-item>
-              <el-dropdown-item command="warning">Cảnh báo</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        
+        <Menu as="div" class="relative">
+          <MenuButton class="inline-flex items-center p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 rounded-md">
+            <FunnelIcon class="w-4 h-4" />
+          </MenuButton>
+          <transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
+          >
+            <MenuItems class="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <MenuItem v-slot="{ active }">
+                <button
+                  @click="filterType = 'all'"
+                  :class="[active ? 'bg-gray-100' : '', filterType === 'all' ? 'text-emerald-600 font-medium' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']"
+                >
+                  Tất cả
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  @click="filterType = 'critical'"
+                  :class="[active ? 'bg-gray-100' : '', filterType === 'critical' ? 'text-emerald-600 font-medium' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']"
+                >
+                  Nghiêm trọng
+                </button>
+              </MenuItem>
+              <MenuItem v-slot="{ active }">
+                <button
+                  @click="filterType = 'warning'"
+                  :class="[active ? 'bg-gray-100' : '', filterType === 'warning' ? 'text-emerald-600 font-medium' : 'text-gray-700', 'block w-full px-4 py-2 text-left text-sm']"
+                >
+                  Cảnh báo
+                </button>
+              </MenuItem>
+            </MenuItems>
+          </transition>
+        </Menu>
       </div>
-    </template>
+    </div>
 
-    <div class="alerts-container" v-loading="loading">
+    <!-- Content -->
+    <div class="flex-1 p-6">
+      <!-- Loading State -->
+      <div v-if="loading" class="space-y-3">
+        <div v-for="i in 3" :key="i" class="animate-pulse">
+          <div class="flex space-x-3">
+            <div class="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Alert Summary -->
-      <div class="alert-summary" v-if="alerts.length > 0">
-        <div class="summary-item critical">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>{{ criticalAlertsCount }} nghiêm trọng</span>
+      <div v-else-if="alerts.length > 0" class="space-y-4">
+        <div class="flex space-x-4 p-3 bg-gray-50 rounded-lg">
+          <div class="flex items-center text-sm text-red-600">
+            <ExclamationCircleIcon class="w-4 h-4 mr-1" />
+            <span class="font-medium">{{ criticalAlertsCount }}</span>
+            <span class="ml-1">nghiêm trọng</span>
+          </div>
+          <div class="flex items-center text-sm text-yellow-600">
+            <ExclamationTriangleIcon class="w-4 h-4 mr-1" />
+            <span class="font-medium">{{ warningAlertsCount }}</span>
+            <span class="ml-1">cảnh báo</span>
+          </div>
         </div>
-        <div class="summary-item warning">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>{{ warningAlertsCount }} cảnh báo</span>
+
+        <!-- Alerts List -->
+        <div class="space-y-3 max-h-80 overflow-y-auto">
+          <div 
+            v-for="alert in filteredAlerts" 
+            :key="alert.id"
+            class="border rounded-lg p-4 hover:shadow-sm transition-shadow duration-200"
+            :class="getAlertBorderClass(alert.alertLevel)"
+          >
+            <div class="flex items-start space-x-3">
+              <!-- Alert Icon -->
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                     :class="getAlertIconClass(alert.alertLevel)">
+                  <component :is="getAlertIcon(alert.alertLevel)" class="w-4 h-4" />
+                </div>
+              </div>
+              
+              <!-- Alert Content -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="text-sm font-medium text-gray-900 truncate">{{ alert.materialName }}</h4>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                        :class="getAlertLevelClass(alert.alertLevel)">
+                    {{ alert.alertLevel === 'critical' ? 'Nghiêm trọng' : 'Cảnh báo' }}
+                  </span>
+                </div>
+                
+                <div class="space-y-1 text-xs text-gray-500">
+                  <div class="flex justify-between">
+                    <span>Hiện tại: <span class="font-medium text-gray-900">{{ alert.currentStock }}</span></span>
+                    <span>Tối thiểu: <span class="font-medium text-gray-900">{{ alert.minStock }}</span></span>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <MapPinIcon class="w-3 h-3 mr-1" />
+                    <span>{{ alert.location }} - {{ alert.warehouse }}</span>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <TagIcon class="w-3 h-3 mr-1" />
+                    <span>{{ alert.category }}</span>
+                  </div>
+                  
+                  <div v-if="alert.daysUntilEmpty" class="flex items-center">
+                    <ClockIcon class="w-3 h-3 mr-1" />
+                    <span :class="alert.daysUntilEmpty <= 5 ? 'text-red-600 font-medium' : ''">
+                      Còn {{ alert.daysUntilEmpty }} ngày
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex space-x-2 mt-3">
+                  <button
+                    @click="handleRestock(alert)"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-emerald-600 border border-transparent rounded hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  >
+                    <PlusIcon class="w-3 h-3 mr-1" />
+                    Nhập thêm
+                  </button>
+                  <button
+                    @click="handleViewDetails(alert)"
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                  >
+                    <EyeIcon class="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Alerts List -->
-      <div class="alerts-list">
-        <div 
-          v-for="alert in filteredAlerts" 
-          :key="alert.id"
-          class="alert-item"
-          :class="alert.alertLevel"
-        >
-          <div class="alert-icon">
-            <i 
-              :class="`fas ${alert.alertLevel === 'critical' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle'}`"
-            ></i>
-          </div>
-          
-          <div class="alert-content">
-            <div class="alert-header">
-              <h4 class="material-name">{{ alert.materialName }}</h4>
-              <span class="alert-level" :class="alert.alertLevel">
-                {{ alert.alertLevel === 'critical' ? 'Nghiêm trọng' : 'Cảnh báo' }}
-              </span>
-            </div>
-            
-            <div class="alert-details">
-              <div class="stock-info">
-                <span class="current-stock">
-                  Hiện tại: <strong>{{ alert.currentStock }}</strong>
-                </span>
-                <span class="min-stock">
-                  Tối thiểu: <strong>{{ alert.minStock }}</strong>
-                </span>
-              </div>
-              
-              <div class="location-info">
-                <i class="fas fa-map-marker-alt"></i>
-                {{ alert.location }} - {{ alert.warehouse }}
-              </div>
-              
-              <div class="category-info">
-                <i class="fas fa-tag"></i>
-                {{ alert.category }}
-              </div>
-              
-              <div class="time-info" v-if="alert.daysUntilEmpty">
-                <i class="fas fa-clock"></i>
-                <span :class="alert.daysUntilEmpty <= 5 ? 'urgent' : ''">
-                  Còn {{ alert.daysUntilEmpty }} ngày
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="alert-actions">
-            <el-button size="small" type="primary" @click="handleRestock(alert)">
-              <i class="fas fa-plus"></i>
-              Nhập thêm
-            </el-button>
-            <el-button size="small" type="info" @click="handleViewDetails(alert)">
-              <i class="fas fa-eye"></i>
-            </el-button>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="!filteredAlerts.length && !loading" class="no-alerts">
-        <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
-        <p class="text-gray-500">Không có cảnh báo nào</p>
+      <!-- No Alerts -->
+      <div v-else class="flex flex-col items-center justify-center h-40">
+        <CheckCircleIcon class="w-12 h-12 text-green-500 mb-2" />
+        <p class="text-gray-500 text-sm">Không có cảnh báo nào</p>
       </div>
     </div>
 
-    <!-- View All Footer -->
-    <div class="alerts-footer" v-if="alerts.length > 5">
-      <el-button type="text" size="small" @click="viewAllAlerts">
+    <!-- Footer -->
+    <div v-if="alerts.length > 5" class="p-4 border-t border-gray-200">
+      <button
+        @click="viewAllAlerts"
+        class="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center justify-center"
+      >
         Xem tất cả {{ alerts.length }} cảnh báo
-        <i class="fas fa-arrow-right ml-1"></i>
-      </el-button>
+        <ArrowRightIcon class="w-3 h-3 ml-1" />
+      </button>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import {
+  ExclamationTriangleIcon,
+  ExclamationCircleIcon,
+  FunnelIcon,
+  MapPinIcon,
+  TagIcon,
+  ClockIcon,
+  PlusIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  ArrowRightIcon
+} from '@heroicons/vue/24/outline'
 
 // Props
 const props = defineProps({
@@ -137,7 +210,7 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['restock', 'view-details', 'view-all'])
 
-// Refs
+// Reactive data
 const filterType = ref('all')
 
 // Computed
@@ -165,8 +238,26 @@ const filteredAlerts = computed(() => {
 })
 
 // Methods
-const handleFilter = (command) => {
-  filterType.value = command
+const getAlertIcon = (level) => {
+  return level === 'critical' ? ExclamationCircleIcon : ExclamationTriangleIcon
+}
+
+const getAlertIconClass = (level) => {
+  return level === 'critical' 
+    ? 'bg-red-100 text-red-600' 
+    : 'bg-yellow-100 text-yellow-600'
+}
+
+const getAlertBorderClass = (level) => {
+  return level === 'critical'
+    ? 'border-red-200 bg-red-50'
+    : 'border-yellow-200 bg-yellow-50'
+}
+
+const getAlertLevelClass = (level) => {
+  return level === 'critical'
+    ? 'bg-red-100 text-red-800'
+    : 'bg-yellow-100 text-yellow-800'
 }
 
 const handleRestock = (alert) => {
@@ -183,223 +274,22 @@ const viewAllAlerts = () => {
 </script>
 
 <style scoped>
-.stock-alerts {
-  border-radius: 12px;
-  border: none;
-  height: 100%;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.alerts-container {
-  min-height: 300px;
-}
-
-.alert-summary {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-}
-
-.summary-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.summary-item.critical {
-  color: #dc2626;
-}
-
-.summary-item.warning {
-  color: #d97706;
-}
-
-.alerts-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.alert-item {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  transition: all 0.2s ease;
-}
-
-.alert-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.alert-item.critical {
-  border-left: 4px solid #dc2626;
-  background: #fef2f2;
-}
-
-.alert-item.warning {
-  border-left: 4px solid #d97706;
-  background: #fffbeb;
-}
-
-.alert-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.critical .alert-icon {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.warning .alert-icon {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.alert-content {
-  flex: 1;
-}
-
-.alert-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.material-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.alert-level {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 12px;
-  text-transform: uppercase;
-}
-
-.alert-level.critical {
-  background: #dc2626;
-  color: white;
-}
-
-.alert-level.warning {
-  background: #d97706;
-  color: white;
-}
-
-.alert-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.stock-info {
-  display: flex;
-  gap: 16px;
-}
-
-.location-info,
-.category-info,
-.time-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.time-info .urgent {
-  color: #dc2626;
-  font-weight: 600;
-}
-
-.alert-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.alerts-footer {
-  padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
-  text-align: center;
-}
-
-.no-alerts {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: #6b7280;
-}
-
-/* Scrollbar styling */
-.alerts-list::-webkit-scrollbar {
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
   width: 4px;
 }
 
-.alerts-list::-webkit-scrollbar-track {
+.overflow-y-auto::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 2px;
 }
 
-.alerts-list::-webkit-scrollbar-thumb {
+.overflow-y-auto::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 2px;
 }
 
-.alerts-list::-webkit-scrollbar-thumb:hover {
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .alert-item {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .alert-actions {
-    flex-direction: row;
-  }
-  
-  .alert-summary {
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 </style>
